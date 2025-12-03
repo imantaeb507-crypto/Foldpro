@@ -1,4 +1,3 @@
-from typing import type
 '''
 This program organizes the folder you give it into 4 folders:
 -a 'Pictures' folder for pictures in the directory
@@ -9,24 +8,23 @@ It does this by making a COPY of the folder that you give it, and then reading a
 names in that folder and organizing them according to their file extensions.
 This program, currently, will work for macOS, Linux and Windows.
 '''
+from major_functions import organizes_folders
+from verifies_access import verifies_access
+from setup import wants_to_start
+from rich.traceback import install
+install()
 
 
+def main() -> None:
+    if wants_to_start():
 
-def main() -> type[None]:
-    pass
+
 
 
 
 
 
 '''
-TODO:
-    add a corrects_names() function at the end of the program in order to  get
-    the folders in their correct names. Correct names:
-    -'Photos'
-    -'Code Files'
-    -'Downloads From Terminal'
-    -Others
 TODO:
     - Make it so that brew refuse's to download Foldproif the system being used isnt macOS and or if the fielsystem being used isnt APFS
     - make sure that each and every line of text Foldpro prints flush's left. And, for those print message that use multiple lines make it so that the print statement that tells to print them is in a readable format and that there are no extra lines above or below the message
@@ -42,4 +40,7 @@ TODO:
     - make it so that every input() statement has .strip() and .lower()
     - somehow ensure that a user has a reliable version of python that can has eveything needed in order to run Foldpro
     - Make all the arrows that the program CAN show in messages those little arrows that chatGPT produces and not the messy ones you makes using - and >
+    - Ensure that whenever sets can be used in a way that dosent interfer wiht the other operations of a program but can make a membership check more efficent that they are used instead of lists
+    - make except statements that capture unexpected errors capable of catching ANY errors so the user will never get a werid cyrptic error message from macOS. Do this for ALL modules.
+
 '''

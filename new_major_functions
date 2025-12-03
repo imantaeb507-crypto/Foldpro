@@ -1,0 +1,164 @@
+from pathlib import Path
+import random
+import shutil
+from typing import List, Dict, Tuple
+from collections import defaultdict
+import os
+import re
+from Helpers import Exit
+from rich.traceback import install
+install()
+fail = Exit.fail
+exit = Exit.exit
+
+class Helper_functions():
+    # Used by both symlink_organizer() and symlink_categorizer():
+
+    @staticmethod
+    def is_download_from_terminal(p: Path) -> bool:
+        TERMINAL_EXTENSIONS = {".sh", ".bash", ".zsh", ".tar.gz", ".tgz", ".zip", ".deb", ".rpm", ".pkg", ".out", ".log", ".whl"}
+        TERMINAL_NAME_PATTERNS = ["setup", "install", "package", "v", "release"]
+
+        PACKAGE_MANAGER_PATHS = [
+            Path("/usr/local/bin"),
+            Path("/opt/homebrew/bin"),
+            Path.home() / ".cargo" / "bin",
+            Path.home() / ".npm",
+            Path.home() / ".local" / "bin",
+        ]
+
+        HIDDEN_CONFIG_FOLDERS = [
+            Path.home() / ".cache",
+            Path.home() / ".pip",
+            Path.home() / ".npm",
+            Path.home() / ".cargo",
+            Path.home() / ".config",
+        ]
+
+        # Normalize path if symlink or has ~
+        if p.is_symlink():
+            p = p.expanduser().resolve(strict=False)
+
+        def is_in_known_dirs(target: Path) -> bool:
+            for folder in PACKAGE_MANAGER_PATHS + HIDDEN_CONFIG_FOLDERS:
+                if folder in target.parents:
+                    return True
+            return False
+
+        def has_terminal_extension(target: Path) -> bool:
+            return target.suffix.lower() in TERMINAL_EXTENSIONS or \
+                any(str(target).lower().endswith(ext) for ext in [".tar.gz", ".tgz"])
+
+        def matches_name_pattern(target: Path) -> bool:
+            return any(pattern in target.name.lower() for pattern in TERMINAL_NAME_PATTERNS)
+
+        return is_in_known_dirs(p) or has_terminal_extension(p) or matches_name_pattern(p)
+
+# ------------------------------------------------------------------------
+
+    # Used by this modules wrapper function(organizes_folders):
+
+    @staticmethod
+    def categorize_files_and_symlinks(workspace: Path) -> Tuple[List[Path], List[Path]]:
+        """
+        Walk through `workspace` and return:
+        - symlinks
+        - regular files
+
+        Hard links are NOT detected separately.
+        Directories are ignored.
+        """
+
+        symlinks = []
+        regular_files = []
+
+        for entry in workspace.rglob("*"):
+            # Skip directories entirely
+            if entry.is_dir():
+                continue
+
+            # Symlink
+            if entry.is_symlink():
+                symlinks.append(entry)
+                continue
+
+            # Regular file
+            try:
+                entry.stat()  # ensures it's a real file
+                regular_files.append(entry)
+            except FileNotFoundError:
+                # Broken symlink or race condition — treat as symlink
+                symlinks.append(entry)
+
+        return symlinks, regular_files
+
+    @staticmethod
+    def name_collison_prevention(p: Path) -> Dict[str, List[Path]]:
+        modified_names = {}
+        # Get a organized dictionary of all double occurences(collisons):
+        name_map = defaultdict(list)
+
+        for root, dirs, files in os.walk(p):
+            # Record folders
+            for d in dirs:
+                full_path = os.path.join(root, d)
+                name_map[d].append(full_path)
+
+            for f in files:
+                full_path = os.path.join(root, f)
+                name_map[f].append(full_path)
+
+        collisions = {name: paths for name, paths in name_map.items() if len(paths) > 1}
+        # append random number to all double occurness so as to prevent future name collisons(and store original + modified version for future cleanup)
+        folder_number = 0
+        for value in collisions.values():
+            for path in value:
+                folder_number += 1
+                modified_name = path.parent / (path.stem + str(random.randint(0,9999999999)))
+                modified_names["folder" + str(folder_number)] = [path, modified_name]
+                path.rename(modified_name)
+
+        return modified_names
+    
+    @staticmethod
+    def move_entrys(*, folders_to_move: List[Path], target_location: Path) -> None:
+        for folder in folders_to_move:
+            try:
+                dest = target_location / folder.name
+                shutil.move(str(folder), str(dest))
+            except Exception as e:
+                fail(f"Failed to move '{folder}' to '{target_location}': {e}")
+    
+    @staticmethod
+    def makes_folders(*, folder_names: List[str], parent_path: Path) -> List[Path]:
+        # Create the folders Foldpro is going to be organinzing into, append 4-digits if and until no collison occurs, and return the folders paths:
+        folders = folder_names
+        created_paths = []
+
+        for folder_name in folders:
+            try:
+
+                folder_path = parent_path / folder_name
+                while folder_path.exists():
+                    folder_path = parent_path / f"{folder_name}{random.randint(0,9999)!s}"
+                folder_path.mkdir(parents=True)
+                created_paths.append(folder_path)
+
+            except PermissionError:
+                print(f"Permission error while creating folder '{folder_path}'.")
+            except OSError as e:
+                print(f"OS error while creating folder '{folder_path}': {e}.")
+            except Exception as e:
+                print(f"Unexpected error while creating folder '{folder_path}': {e}.")
+
+        return created_paths
+    
+# ------------------------------------------------------------------------
+
+def get_code_files(tmp_folder_copies) -> None:
+    cleanup_data = Helper_functions.name_collison_prevention(tmp_folder_copies)
+    CODE_FILES = Helper_functions.makes_folders(folder_names=["Code Files"])
+
+
+
+
