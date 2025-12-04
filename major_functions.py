@@ -187,9 +187,6 @@ class Helper_functions():
 
 
 # Main functionality:
-
-
-def symlink_organizer() -> None:
     
 
 
@@ -305,8 +302,3 @@ def organizes_folders(p: Path) -> str:
 
 
 
-#TODO: Get unit tests done
-#TODO: Implement every module level note to self(contained in main) in all 3 modules of Foldpro(except for the stuff that tells you how to package Foldpro in brew)
-#TODO: make it able to repeatedy organize folders
-#TODO: Make chatgpt rewrite a version of your code that is near unbreakable with robust error handling. Make sure to specify that you want the error messages to be actually helpfuel and applicable for the user and give it the already checked for list so it dosent give any repetive/uneccary instructions in the error messages. And also rememebr to tell it to use the fail function.
-#TODO: After your absolutely sure that your code works exactly like you want it to work, get chatGPT to write a more organized version of it!
