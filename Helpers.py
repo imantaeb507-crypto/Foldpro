@@ -76,8 +76,8 @@ def _resolve_path(user_input: str) -> Path:
 
 def _prompt_till_good_path() -> Path:
     print(
-"==================================\n"
-"Enter the path (absolute or relative) to the folder you want to organize:"
+    "==================================\n"
+    "Enter the path (absolute or relative) to the folder you want to organize:"
     )
     while True:
         raw_path = input('>').strip().lower()

@@ -142,7 +142,7 @@ class Setup:
 
 
 #TODO: get all the preflight operations modulated, tested, and then put into the preflight class
-#  - Figure out what preliminary actions you are going to include in __enter__ and then include them put them all into a list
+#  - Centralize path cleaning in major_funcitons 
 #  - Test all of them isolated and then togetor
 #  - Integrate into __enter__
 #  - Get ChatGPT to give you the errors list  
