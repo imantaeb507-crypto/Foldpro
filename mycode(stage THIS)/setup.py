@@ -1,9 +1,7 @@
 from pathlib import Path
 import re
-import glob
-from typing import Tuple, Optional
-import os
-from Helpers import Exit, Formatter, YES, NO, EXIT, mk_random
+from typing import Tuple
+from FoldproHelpers import Exit, Formatter, YES, NO, EXIT, mk_random
 from rich.traceback import install
 from rich import print
 install()
@@ -12,20 +10,16 @@ fail = Exit.fail
 foldpro_exit = Exit.exit
 
 
-
-
-
-
-# ---------------------------
-# Functionality 1; Setup
-# ---------------------------
-
-
-def set_up_workspace() -> Tuple[Path, Path]:
+def set_up_workspace() -> Tuple[Path, bool]:
    '''
-   Makes Foldpro's workspace(if it dosent exist yet) and it's necessary sub-folders.
+   Makes Foldpro's workspace(if it dosent exist yet). This is where temporary folder copies will go to get organized.
    '''
-   def _make_workspace() -> Tuple[Path, Path]:
+
+   # This function figure out wether this is the first time a Foldpro command is running on a Users computer as part of its main task.
+   # To make this information available for setup_instructions_wrapper(), 
+   # I store it in this variable and return it as the last value so the other function can behave correctly.
+   has_already_ran = False
+   def _make_workspace() -> Tuple[Path, bool]:
        # In the extremly rare case that /tmp/Foldpro-Workspace with 15 random numbers appended to the name also exists under tmp, Foldpro will continue to attempt to make a unique folder under tmp:
        while True:
            random_15_digits = mk_random(15)
@@ -35,12 +29,9 @@ def set_up_workspace() -> Tuple[Path, Path]:
                break
            except FileExistsError:
                continue
-       history_dir = workspace / 'history_dir'
-       folder_copies = workspace / 'tmp_folder_copies'
-       history_dir.mkdir()
-       folder_copies.mkdir()
-       return folder_copies, history_dir
-  
+       return workspace, has_already_ran
+
+
    # Find the already existing workspace(if there is one):
    pattern = re.compile(r"^Foldpro-Workspace\d{15}$")
    matches = [Path(p) for p in Path("/tmp").iterdir() if p.is_dir() and pattern.match(p.name)]
@@ -48,22 +39,16 @@ def set_up_workspace() -> Tuple[Path, Path]:
 
 
 
-   # If there already is a workspace, simply return it's subfolders:
+   # If there already is a workspace, return it's path as a path object:
    if matches:
-       folder_copies = matches[0] / 'tmp_folder_copies'
-       history_dir = matches[0] / 'history_dir'
-       return folder_copies, history_dir
+       has_already_ran = True
+       workspace = matches[0]
+       return workspace, has_already_ran
   
-   # If not, make it, and then return its newly created subfolders:
+   # If not, make it, and then return it's path object:
    else:
-       return _make_workspace()
+       return (_make_workspace())
   
-
-
-  
-
-
-
 
 def set_up_instructions():
    '''
@@ -80,7 +65,7 @@ def set_up_instructions():
    "   How To Do That: https://www.youtube.com/watch?v=wfX4rfVHY7s&t=95s\n\n"
 
 
-   "Type 'd' to move on."
+   "Type 'd' when done."
    ))
 
 
@@ -96,7 +81,7 @@ def set_up_instructions():
            ))
 
 
-def setup_instructions_wrapper() -> type[None]:
+def setup_instructions_wrapper() -> None:
    '''
    Introduces user to Foldpro and walks them through setup proccess
    '''
@@ -147,34 +132,8 @@ def setup_instructions_wrapper() -> type[None]:
 
 
 
-class Setup:
-   # Full setup: Will only ever run once in the beginning, when the user first runs the program:
-   @staticmethod
-   def full_setup() -> Tuple[Path, Path]:
-       setup_instructions_wrapper()
-       return set_up_workspace
-   # runs when the program just wants to get the workspace subfolder paths:
-   @staticmethod
-   def get_workspace_subfolders() -> Tuple[Path, Path]:
-       return set_up_workspace
-   
-
-
-
-#TODO: get all the preflight operations modulated, tested, and then put into the preflight class
-#  - Test all of them isolated and then togetor
-#  - Integrate into __enter__
-#  - Get ChatGPT to give you the errors list 
-#  - Get that integrated into all of the functionality and anything that might need to go along with it
-#  - Integrate the whole thing into typer
-
-
-
-'''
-Tested already:
-  - All of setup module
-  - canonical_version from Helpers
-
-
-
-'''
+def setup():
+    workspace, has_already_ran = set_up_workspace()
+    if not has_already_ran:
+        setup_instructions_wrapper()
+    return workspace

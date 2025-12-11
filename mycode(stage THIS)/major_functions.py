@@ -1,4 +1,3 @@
-# This module structures folder organization into clear, high-level functions, with detailed actions handled by helper methods for readability and maintainability.
 from pathlib import Path
 import random
 import shutil
@@ -6,7 +5,7 @@ from typing import List, Dict, Tuple
 from collections import defaultdict
 import os
 import re
-from Helpers import Exit
+from FoldproHelpers import Exit, mk_random
 from rich.traceback import install
 install()
 fail = Exit.fail
@@ -64,22 +63,18 @@ class Helper_functions():
             Path.home() / ".config",
         ]
 
-        # Normalize path if symlink or has ~
-        if p.is_symlink():
-            p = p.expanduser().resolve(strict=False)
-
-        def is_in_known_dirs(target: Path) -> bool:
+        def is_in_known_dirs(p: Path) -> bool:
             for folder in PACKAGE_MANAGER_PATHS + HIDDEN_CONFIG_FOLDERS:
-                if folder in target.parents:
+                if folder in p.parents:
                     return True
             return False
 
-        def has_terminal_extension(target: Path) -> bool:
-            return target.suffix.lower() in TERMINAL_EXTENSIONS or \
-                any(str(target).lower().endswith(ext) for ext in [".tar.gz", ".tgz"])
+        def has_terminal_extension(p: Path) -> bool:
+            return p.suffix.lower() in TERMINAL_EXTENSIONS or \
+                any(str(p).lower().endswith(ext) for ext in [".tar.gz", ".tgz"])
 
-        def matches_name_pattern(target: Path) -> bool:
-            return any(pattern in target.name.lower() for pattern in TERMINAL_NAME_PATTERNS)
+        def matches_name_pattern(p: Path) -> bool:
+            return any(pattern in p.name.lower() for pattern in TERMINAL_NAME_PATTERNS)
 
         return is_in_known_dirs(p) or has_terminal_extension(p) or matches_name_pattern(p)
 
@@ -122,12 +117,16 @@ class Helper_functions():
         return symlinks, regular_files
 
     @staticmethod
-    def name_collison_prevention(p: Path) -> Dict[str, List[Path]]:
-        modified_names = {}
-        # Get a organized dictionary of all double occurences(collisons):
+    def name_collison_prevention(p: Path) -> List[Path]:
+        '''
+        The following code searches recursively in the given folder(p) for all file or folder names that occur more than once in the directory.
+        It then appends a random 10 digit number to the end of them so as to avoid any future collisons when Foldpro moves any of the folders or files.
+        Later in the code, the finalizer function reverse's this by removing ten random digits from the ends of folder names and file stems.
+        '''
+        modified_names = []
         name_map = defaultdict(list)
 
-        for root, dirs, files in os.walk(p):
+        for root, dirs, files in os.walk(p, topdown=False):
             # Record folders
             for d in dirs:
                 full_path = os.path.join(root, d)
@@ -139,24 +138,20 @@ class Helper_functions():
 
         collisions = {name: paths for name, paths in name_map.items() if len(paths) > 1}
         # append random number to all double occurness so as to prevent future name collisons(and store original + modified version for future cleanup)
-        folder_number = 0
         for value in collisions.values():
             for path in value:
-                folder_number += 1
-                modified_name = path.parent / (path.stem + str(random.randint(0,9999999999)))
-                modified_names["folder" + str(folder_number)] = [path, modified_name]
+                path = Path(path)
+                modified_name = path.parent / (path.stem + mk_random(10) + path.suffix)
                 path.rename(modified_name)
-
+                modified_names.append(modified_name)
         return modified_names
     
     @staticmethod
-    def move_entrys(*, folders_to_move: List[Path], target_location: Path) -> None:
+    def move_entrys(*, folders_to_move: List[Path], p_location: Path) -> None:
         for folder in folders_to_move:
-            try:
-                dest = target_location / folder.name
-                shutil.move(str(folder), str(dest))
-            except Exception as e:
-                fail(f"Failed to move '{folder}' to '{target_location}': {e}")
+            dest = p_location / folder.name
+            shutil.move(str(folder), str(dest))
+
     
     @staticmethod
     def makes_folders(*, folder_names: List[str], parent_path: Path) -> List[Path]:
@@ -165,20 +160,11 @@ class Helper_functions():
         created_paths = []
 
         for folder_name in folder_names:
-            try:
-
-                folder_path = parent_path / folder_name
-                while folder_path.exists():
-                    folder_path = parent_path / f"{folder_name}{random.randint(0,9999)!s}"
-                folder_path.mkdir(parents=True)
-                created_paths.append(folder_path)
-
-            except PermissionError:
-                print(f"Permission error while creating folder '{folder_path}'.")
-            except OSError as e:
-                print(f"OS error while creating folder '{folder_path}': {e}.")
-            except Exception as e:
-                print(f"Unexpected error while creating folder '{folder_path}': {e}.")
+            folder_path = parent_path / folder_name
+            while folder_path.exists():
+                folder_path = parent_path / f"{folder_name}{random.randint(0,9999)!s}"
+            folder_path.mkdir(parents=True)
+            created_paths.append(folder_path)
 
         return created_paths
     
@@ -198,13 +184,17 @@ def symlink_organizer(symlinks: List[Path]) -> None:
     non_organizable = []
 
     for symlink in symlinks:
-        target = symlink.expanduser().resolve(strict=False)
-        if target.is_dir() or not target.exists():
-            non_organizable.append(symlink)  
+        p = Path(os.readlink(str(symlink)))
+        if not p.is_absolute():    # I move symlinks with non-absolute paths to the non_organizable list because Foldpro cant relaibily make them absolute like it needs to.
+            non_organizable.append(symlink)
+            continue
+        if p.is_dir() or not p.exists():
+            non_organizable.append(symlink)
+            continue
         else:
             organizable_symlinks.append(symlink)
 
-    # Organize all non_organizable's into others and the rest into one of the created subfolders according to their targets location:
+    # Organize all non_organizable's into others and the rest into one of the created subfolders according to their ps location:
     for sym in non_organizable:
         shutil.move(str(sym), str(OTHERS))
     for sym in organizable_symlinks:
@@ -212,12 +202,15 @@ def symlink_organizer(symlinks: List[Path]) -> None:
 
         if suffix in image_extensions:
             shutil.move(str(sym), str(PICTURES / sym.name))
+            continue
 
         elif suffix in code_extensions:
             shutil.move(str(sym), str(CODE_FILES / sym.name))
+            continue
 
         elif Helper_functions.is_download_from_terminal(sym):
             shutil.move(str(sym), str(DOWNLOADS_FROM_TERMINAL / sym.name))
+            continue
         else:
             shutil.move(str(sym), str(OTHERS / sym.name))
 

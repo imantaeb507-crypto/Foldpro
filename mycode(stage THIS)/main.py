@@ -8,15 +8,27 @@ It does this by making a COPY of the folder that you give it, and then reading a
 names in that folder and organizing them according to their file extensions.
 This program, currently, will work for macOS, Linux and Windows.
 '''
-from major_functions import organizes_folders
-from verifies_access import verifies_access
-from setup import wants_to_start
-from rich.traceback import install
-install()
 
 
-def main() -> None:
-    if wants_to_start():
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

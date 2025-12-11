@@ -1,75 +1,9 @@
-# This module contains functions that two or more other modules of the program will use
 from typing import Union, Optional
-import os
-import sys
-import random
+from FoldproHelpers import Formatter, foldpro_exit, YES, NO, EXIT
 from pathlib import Path
+import os
 import re
 import time
-from rich import print
-
-
-# ---------------------------
-# Exit and Fail helpers
-# ---------------------------
-class Exit:
-    @staticmethod
-    def fail(msg: str, fix_command: str = None):
-        print(
-            "============= Error ==============\n"
-            f"FOLDPRO ERROR: {msg}", 
-            file=sys.stderr
-        )
-        if fix_command:
-            print(f"Shortcut to fix & retry:\n{fix_command}")
-        sys.exit(1)
-
-    @staticmethod
-    def exit():
-        print(
-        "[bold]==================================[/bold]\n"
-        "[bold]Thank you for considering FoldPro.[/bold]\n"
-        "[bold]==================================[/bold]"
-        )
-        sys.exit()
-
-
-class Formatter:
-    '''
-    I wanted this program to display messages in a consistent way that adapted to the mode the user is in.
-    To accomplish that, I wrote this class.
-    '''
-    def __init__(self, header):
-        self.header = header
-
-    def format(self, *lines):
-        formatted_message = [f"[bold]{self.header}[/bold]\n"]
-        for line in lines:
-            formatted_message.append(f"[bold]{line}[/bold]\n")
-        return ( "".join(formatted_message).rstrip())
-    
-    
-
-
-# User options that Foldpro will use for memebership checks:
-YES = {'yes', 'yep', 'yup', 'y', 'yrp', 'mhmm'}
-NO = {'no', 'n', 'nope', 'nah', 'nahh'}
-EXIT = {'e', 'exit', 'q', 'quit'}
-
-'''
-class Foldpro_preflight_manager():
-    def __enter__():
-'''
-
-foldpro_exit = Exit.exit
-
-# makes however many random digits you tell it too:
-def mk_random(amount_of_digits: int) -> str:
-    digits = []
-    for i in range(amount_of_digits):
-        digits.append(str(random.randint(0,9)))
-    digits = ''.join(digits)
-    return digits
 
 
 def canonical_version(path: str, header: Formatter) -> Union[Path, str]:
@@ -213,75 +147,7 @@ def prompt_till_good_path(header: Formatter) -> Path:
 
 
 
-                
 
+def get_good_path(header: Formatter):
+    prompt_till_good_path(header)
 
-
-
-
-
-
-
-
-
-
-
-'''
-def _preflight_permission_check() -> None:
-
-    home = os.path.expanduser("~")
-
-    # TCC-protected folders
-    tcc_folders = ["Library/Messages", "Library/Mail", "Library/Calendars", "Library/Containers", "Library/Photos"]
-    for folder in tcc_folders:
-        path = os.path.join(home, folder)
-        if os.path.exists(path):
-            test_file = os.path.join(path, ".foldpro_tcc_test")
-            try:
-                with open(test_file, "w") as f:
-                    f.write("test")
-                os.remove(test_file)
-            except Exception:
-                fail(
-f"Cannot write to TCC folder '{folder}'. Grant Full Disk Access.",
-fix_command="Open System Settings → Privacy & Security → Full Disk Access → enable Terminal"
-                )
-
-    # ACL / extended attribute check
-    acl_test = os.path.join(home, ".foldpro_acl_test")
-    try:
-        with open(acl_test, "w") as f:
-            f.write("test")
-        os.listxattr(acl_test)
-        os.remove(acl_test)
-    except Exception:
-        fail(
-"Cannot access extended attributes. Check ACL/permissions in home folder.",
-fix_command=f"chmod -R u+rwX '{home}' && Foldpro"
-        )
-
-    # Cross-volume linking
-    cross_src = os.path.join(home, ".foldpro_cross_src")
-    cross_dst = "/tmp/.foldpro_cross_dst"
-    try:
-        with open(cross_src, "w") as f:
-            f.write("test")
-        try:
-            os.link(cross_src, cross_dst)
-        except OSError as e:
-            if e.errno != errno.EXDEV:
-                fail(
-f"Unexpected cross-volume link error: {e}",
-fix_command=f"Ensure source and /tmp are on same volume then run: Foldpro"
-                )
-        finally:
-            for f in [cross_src, cross_dst]:
-                try:
-                    os.remove(f)
-                except Exception:
-                    pass
-    except Exception:
-        fail(
-    "Cross-volume test failed. Check volumes and permissions.",
-    fix_command="Ensure volumes are writable and retry: Foldpro"
-'''
