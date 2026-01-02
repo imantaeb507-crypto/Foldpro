@@ -1,4 +1,4 @@
-from .overall_flow import determine_mode, after_organization_decision, clean_exit, MODE_HEADERS, is_macOS
+from .overall_flow import determine_mode, after_organization_decision, clean_exit, MODE_HEADERS, is_macOS, WantsToExit
 from .Foldpro_command import Foldpro_command
 from .preflight_operations import preflight_operations
 
