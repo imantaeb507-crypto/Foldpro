@@ -1,5 +1,5 @@
 from pathlib import Path
-from FoldproHelpers import (Formatter, EXIT, WantsToExit, AtomicCopyError, 
+from .FoldproHelpers import (Formatter, EXIT, WantsToExit, AtomicCopyError, 
                             PartiallyOrganizedError, NonAtomicMoveError, DbCorruptError, WrongOSError)
 import sys
 from typing import Optional, Tuple

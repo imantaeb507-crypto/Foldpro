@@ -6,12 +6,11 @@
 from pathlib import Path
 import re
 from typing import Union, Optional
-from FoldproHelpers import Formatter, YES, NO, EXIT, is_fold, unique_path, AtomicCopyError, WantsToExit, WrongOSError
+from .FoldproHelpers import Formatter, YES, NO, EXIT, is_fold, unique_path, AtomicCopyError, WantsToExit, mk_random
 import os
 import time
 import shutil
 from rich import print
-from FoldproHelpers import mk_random
 
 SETUP_FORMATTER = Formatter(header="Setup", header_color="yellow")
 

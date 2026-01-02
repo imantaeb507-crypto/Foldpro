@@ -6,7 +6,7 @@ import shutil
 from typing import Tuple, Literal, Optional
 import os
 import re
-from FoldproHelpers import unique_path, pretty_unique_path, FILENAME_PATTERN, PartiallyOrganizedError, DbCorruptError, NonAtomicMoveError
+from .FoldproHelpers import unique_path, pretty_unique_path, FILENAME_PATTERN, PartiallyOrganizedError, DbCorruptError, NonAtomicMoveError
 import shelve
 
 # Used by organize_files and organize_symlinks functions, respectively:
