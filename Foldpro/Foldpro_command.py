@@ -52,10 +52,10 @@ class HelperFunctions():
         """
         # determine workspace (parent directory of the user_folder_copy)
         try:
-            # Workspace is /tmp/Foldpro-Workspace* and dest is always /tmp/Foldpro-Workspace*/<user_given_folder_copy>/<a_subfolder>/<a_file>
-            # so therefore we can derive the workspace by getting the third parent of dest:
-            workspace = dest.parents[2]
-            dest = unique_path((dest / src.name), dest_type, workspace=workspace)
+            # Workspace is /tmp/Foldpro-Workspace* and dest is always /tmp/Foldpro-Workspace*/<user_given_folder_copy>/<a_subfolder>
+            # so therefore we can derive the workspace by getting the second parent of dest:
+            workspace = dest.parents[1]
+            dest = unique_path(p=(dest / src.name), type=dest_type, workspace=workspace)
             shutil.move(src, dest)
         except Exception as e:
             raise PartiallyOrganizedError(error_cause = e)
@@ -286,8 +286,10 @@ def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
 
         else:
             m = FILENAME_PATTERN.match(entry.name)
-            original = m.group('hidden') + m.group('stem') + (m.group('suffix') or '')
-            new_name = pretty_unique_path(entry.parent / original, 'file')
+            modified_stem = m.group('hidden') + m.group('stem')
+            cleaned_stem = modified_stem[:-10]
+            cleaned_file_name = cleaned_stem + (m.group('suffix') or '')
+            new_name = pretty_unique_path(entry.parent / cleaned_file_name, 'file')
             entry.rename(new_name)
     
     # Find or create destination folder

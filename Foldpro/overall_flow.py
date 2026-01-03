@@ -118,7 +118,10 @@ def clean_exit(func):
             print("[bold]Foldpro Exited.[/bold]")
             sys.exit(0)
         except WrongOSError:
-            print("[bold]Foldpro can only run on macOS.[/bold]")
+            print(
+                "[red]------ An Error Occurred ------[/red]\n"
+                "[bold]Foldpro can only run on macOS.[/bold]"
+                )
             sys.exit(1)
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             # Determine if special case (KeyboardInterrupt)
@@ -229,15 +232,15 @@ def after_organization_decision(final_dest: Path, mode_header: Formatter) -> str
         "* Choose different mode: (change)",
         "* Exit Foldpro: (exit)"
     ))
-    
-    valid_choices = {'repeat', 'change', 'exit'}
-    
+
+    valid_choices = ['repeat', 'r', 'change', 'c', 'exit']
+
     while True:
         decision = input('>').strip().lower()
         
         if decision in EXIT:
             return 'exit'
-        
+
         if decision in valid_choices:
             return decision
         

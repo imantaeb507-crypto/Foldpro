@@ -15,7 +15,7 @@ def main():
         
         if decision == 'exit':
             raise WantsToExit
-        elif decision == 'change':
+        elif decision in ['change', 'c']:
             mode = determine_mode()
         # 'repeat' continues the loop automatically
 
