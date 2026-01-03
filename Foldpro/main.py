@@ -2,9 +2,9 @@ from .overall_flow import determine_mode, after_organization_decision, clean_exi
 from .Foldpro_command import Foldpro_command
 from .preflight_operations import preflight_operations
 
-@clean_exit
 def main():
     is_macOS()
+    mode = determine_mode()
     while True:
         mode_header = MODE_HEADERS[mode]
         user_folder_copy = preflight_operations(mode_header=mode_header)

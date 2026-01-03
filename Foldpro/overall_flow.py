@@ -246,7 +246,6 @@ def after_organization_decision(final_dest: Path, mode_header: Formatter) -> str
         ))
 
 
-
 def is_macOS() -> None:
     '''Does nothing if the OS is macOS, raises WrongOSError otherwise.'''
     if platform.system() != 'Darwin':
