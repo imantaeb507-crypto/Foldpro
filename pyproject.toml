@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "Foldpro"
-version = "1.0.0"
+version = "1.0.1"
 description = 'A program to make organized copies of your folders.'
 readme = "README.md"
 requires-python = ">=3.9"
