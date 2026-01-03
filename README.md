@@ -13,9 +13,10 @@ These organized copies can be categorized into one (or all) of the following:
 - Python 3.9 or higher
 
 # How to Use
-1. Install Foldpro (insert installation command here)
+1. Install Foldpro: pip3 install foldpro
 2. Follow the prompts until your folders have been organized
-3. Go to `~/Foldpro Copies` to view the organized copy
+3. Run it: foldpro
+4. Go to `~/Foldpro Copies` to view the organized copy
 
 **Note:** To exit at any time, enter `e` at any prompt.
 
