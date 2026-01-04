@@ -6,7 +6,7 @@ import shutil
 from typing import Tuple, Literal, Optional
 import os
 import re
-from .FoldproHelpers import pretty_unique_path, FILENAME_PATTERN, PartiallyOrganizedError, NonAtomicMoveError
+from .FoldproHelpers import pretty_unique_path, PartiallyOrganizedError, NonAtomicMoveError
 
 # Used by organize_files and organize_symlinks functions, respectively:
 IMAGE_EXTENSIONS = {
