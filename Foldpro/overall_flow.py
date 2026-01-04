@@ -1,6 +1,6 @@
 from pathlib import Path
 from .FoldproHelpers import (Formatter, EXIT, WantsToExit, AtomicCopyError, 
-                            PartiallyOrganizedError, NonAtomicMoveError, DbCorruptError, WrongOSError)
+                            PartiallyOrganizedError, NonAtomicMoveError, WrongOSError)
 import sys
 from typing import Optional, Tuple
 import shutil
@@ -28,9 +28,6 @@ HOME_HEADER = Formatter(header="Home", header_color="cyan")
 # ============================================================================
 
 ERROR_MESSAGES = {
-    DbCorruptError: lambda e: (
-        f"Foldpro ran into a {e.error_cause.__class__.__name__} while using its local database at {e.workspace}.",
-    ),
     PartiallyOrganizedError: lambda e: (
         f"Foldpro ran into a {e.error_cause.__class__.__name__} while organizing your files."),
     NonAtomicMoveError: lambda e: (

@@ -6,8 +6,7 @@ import shutil
 from typing import Tuple, Literal, Optional
 import os
 import re
-from .FoldproHelpers import unique_path, pretty_unique_path, FILENAME_PATTERN, PartiallyOrganizedError, DbCorruptError, NonAtomicMoveError
-import shelve
+from .FoldproHelpers import pretty_unique_path, FILENAME_PATTERN, PartiallyOrganizedError, NonAtomicMoveError
 
 # Used by organize_files and organize_symlinks functions, respectively:
 IMAGE_EXTENSIONS = {
@@ -48,14 +47,14 @@ class HelperFunctions():
     def move(src: Path, dest: Path, dest_type: str) -> None:
         """
         Moves a file or symlink to the destination folder.
-        Uses unique_path to avoid name collisions.
+        Uses pretty_unique_path to avoid name collisions.
         """
         # determine workspace (parent directory of the user_folder_copy)
         try:
             # Workspace is /tmp/Foldpro-Workspace* and dest is always /tmp/Foldpro-Workspace*/<user_given_folder_copy>/<a_subfolder>
             # so therefore we can derive the workspace by getting the second parent of dest:
             workspace = dest.parents[1]
-            dest = unique_path(p=(dest / src.name), type=dest_type, workspace=workspace)
+            dest = pretty_unique_path(p=(dest / src.name), type=dest_type)
             shutil.move(src, dest)
         except Exception as e:
             raise PartiallyOrganizedError(error_cause = e)
@@ -128,14 +127,11 @@ class HelperFunctions():
     @staticmethod
     def make_folders(*, folder_names: list[str], parent_path: Path) -> list[Path]:
         '''
-        Create the folders Foldpro is going to be organinzing into. Append 10 digits continously until no collisons occurs.
-        P.S.The reason its ten digits specificlly is because it give us a specific number to search for when reverting the names back to their orginal form in the finalize_state function.
+        Create the folders Foldpro is going to be organinzing into. Append digits if neccary for making unique path
         '''
         created_paths = []
         for folder_name in folder_names:
-            # workspace is always /tmp/Foldpro-Workspace* and parent_path is always /tmp/Foldpro-Workspace*/<user_given_folder_copy>/<a_subfolder> so therefore the second parent of parent_path is the workspace:
-            workspace = parent_path.parents[1]
-            folder_path = unique_path((parent_path / folder_name), 'folder', workspace=workspace)
+            folder_path = pretty_unique_path(p=(parent_path / folder_name), type='folder')
             folder_path.mkdir()
             created_paths.append(folder_path)
 
@@ -264,34 +260,6 @@ def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
             if item.is_dir() and item.name not in keep_names:
                 shutil.rmtree(item)
     
-    # Revert modified names
-    database = str(user_folder_copy.parent / 'FoldproDb')  
-    try:
-        with shelve.open(database) as db:
-            cleanup_list = db.get('clean_me', [])
-            db['clean_me'] = []
-    except Exception as e:
-        raise DbCorruptError(error_cause=e, workspace=user_folder_copy.parent)
-    
-    NON_FILE = re.compile(r'^(.+)(\d{10})$')
-    for entry in reversed(cleanup_list):
-        if entry.is_symlink() or entry.is_dir():
-            base = (NON_FILE.match(entry.name)).group(1)
-            # Here we have pretty_unique_path run on every folder and symlink except user_folder_copy since we dont want the function to run on it once here and once below(to evaluate dest):
-            if not (entry == user_folder_copy):
-                new_name = pretty_unique_path(entry.parent / base, 'folder')
-                entry.rename(new_name)
-                continue
-            user_folder_copy = user_folder_copy.parent / base
-
-        else:
-            m = FILENAME_PATTERN.match(entry.name)
-            modified_stem = m.group('hidden') + m.group('stem')
-            cleaned_stem = modified_stem[:-10]
-            cleaned_file_name = cleaned_stem + (m.group('suffix') or '')
-            new_name = pretty_unique_path(entry.parent / cleaned_file_name, 'file')
-            entry.rename(new_name)
-    
     # Find or create destination folder
     pattern = re.compile(r'^Foldpro Copies(\d+)?$')
     foldpro_copies = next(
@@ -301,7 +269,7 @@ def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
     )    
 
     if not foldpro_copies:
-        foldpro_copies = pretty_unique_path(Path.home() / 'Foldpro Copies', 'folder')
+        foldpro_copies = pretty_unique_path(p = (Path.home() / 'Foldpro Copies'), type='folder')
         foldpro_copies.mkdir()
         (foldpro_copies / '.YOUFOUNDME').touch()
 

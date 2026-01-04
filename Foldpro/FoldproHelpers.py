@@ -1,6 +1,5 @@
 # This module contains functions classes and variables that two or more other modules of the program will use
 
-import shelve
 import random
 import re
 from pathlib import Path
@@ -121,7 +120,7 @@ def is_file(path: Path) -> bool:
 
 def get_unique_path_components(p: Path, type: str) -> tuple[str, str, Path]:
     '''
-    Helper for both pretty_unique_path and unique_path to get the stem, suffix and parent of a path while dealing with multi, sindgle suffix files, hidden files and any mixture of those.'''
+    Helper for pretty_unique_path to get the stem, suffix and parent of a path while dealing with multi, sindgle suffix files, hidden files and any mixture of those.'''
     match = FILENAME_PATTERN.match(p.name)
     if type == 'file' and match:
         stem = match.group('hidden') + match.group('stem')
@@ -136,8 +135,7 @@ def get_unique_path_components(p: Path, type: str) -> tuple[str, str, Path]:
 
 def pretty_unique_path(p: Path, type: str) -> Path:
     '''
-    Helper used exclusively when we want to  get a unique path with as little digit appendements as possible for ~/Foldpro Copies and ~/Foldpro Copies/<organized_copy>.
-    P.S. We want to have as little digit appendements as possible in these folders because they are user facing and we want them to look nice.
+    Helper used whenever we wanna get a unique path with minimal number appending.
     '''
     stem, suffix, parent = get_unique_path_components(p, type)
     i = 0
@@ -174,16 +172,6 @@ class PartiallyOrganizedError(Exception):
         self.error_cause = error_cause
 
 
-class DbCorruptError(Exception):
-    '''
-    Raised when a shelve operation fails, as this creates the possibility that the clean_me variable stored in the shelve has been written inconsistently.
-    If so, future runs may operate on corrupted data.
-    '''
-
-    def __init__(self, workspace: Path, error_cause: Exception):
-        self.error_cause = error_cause  # This is the specific error that caused the DbCorruptError to be raised
-        self.workspace = workspace   # Useful later in clean_exit
-
 class NonAtomicMoveError(Exception):
     '''
     Raised when Foldpro fails to move all files to final location(~/Foldpro Copies*).
@@ -203,33 +191,3 @@ class WrongOSError(Exception):
     Raised when the user is not running Foldpro on macOS.
     '''
     pass
-
-
-
-def unique_path(p: Path, type: str, workspace: Path) -> Path:
-    '''
-    Ensures a path is unique by appending ten random digits until it is.
-    Why Ten Digits?: Because it one gives us enough combinations to practically guarantee we find a unique path and it gives us a 
-    number of digits to look for when reverting names later.
-
-    P.S: The clean_me variable stored in shelve is used to keep track of all modified names that need to be cleaned up later in finalize_state(i.e. have the ten random digits removed).
-    '''
-    has_been_modified = False
-    stem, suffix, parent = get_unique_path_components(p, type)
-    candidate = p
-    while exists(candidate):
-        candidate = parent / f"{stem}{mk_random(10)}{suffix}"
-        has_been_modified = True
-
-
-    # If the path was modified, store it for future cleanup:
-    try:
-        if has_been_modified:
-            database = workspace / 'FoldproDb'
-            with shelve.open(database) as db:
-                cleanup_list = db.get('clean_me', [])  # get existing or start empty
-                cleanup_list.append(candidate)
-                db['clean_me'] = cleanup_list        # write it back
-    except Exception as e:
-        raise DbCorruptError(workspace=workspace, error_cause=e)
-    return candidate

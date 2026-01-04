@@ -6,7 +6,7 @@
 from pathlib import Path
 import re
 from typing import Union, Optional
-from .FoldproHelpers import Formatter, YES, NO, EXIT, is_fold, unique_path, AtomicCopyError, WantsToExit, mk_random
+from .FoldproHelpers import Formatter, YES, NO, EXIT, is_fold, AtomicCopyError, WantsToExit, mk_random, pretty_unique_path
 import os
 import time
 import shutil
@@ -223,7 +223,7 @@ def mk_copy(workspace: Path, source_folder: Path) -> Path:
     Copy source folder to workspace with unique name.
     Returns path to the copy.
     """
-    dest = unique_path(p=(workspace / source_folder.name), type='folder', workspace=workspace)
+    dest = pretty_unique_path(p=(workspace / source_folder.name), type='folder')
     
     try:
         shutil.copytree(source_folder, dest, symlinks=True)
