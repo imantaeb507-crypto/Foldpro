@@ -88,11 +88,11 @@ def validate_path(path: Path) -> Optional[str]:
     """
     # Check existence
     if not path.exists():
-        return f"The path '{display_path(str(path))}' does not exist"
+        return f"The path '{display_path(str(path))}' does not exist."
     
     # Check if directory
     if not path.is_dir():
-        return f"The path '{display_path(str(path))}' is not a folder"
+        return f"The path '{display_path(str(path))}' is not a folder."
     
     # Check under home directory
     if Path.home() not in path.parents and path != Path.home():
