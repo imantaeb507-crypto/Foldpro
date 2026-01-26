@@ -6,7 +6,7 @@ import shutil
 from typing import Tuple, Literal, Optional
 import os
 import re
-from .FoldproHelpers import pretty_unique_path, PartiallyOrganizedError, NonAtomicMoveError
+from .foldproHelpers import prettyUniquePath, partiallyOrganizedError, nonAtomicMoveError
 
 # Used by organize_files and organize_symlinks functions, respectively:
 IMAGE_EXTENSIONS = {
@@ -44,20 +44,20 @@ SINGLE_EXTS = {".sh", ".bash", ".zsh", ".zip", ".deb", ".rpm", ".pkg", ".out", "
 class HelperFunctions():
 
     @staticmethod
-    def move(src: Path, dest: Path, dest_type: str) -> None:
+    def move(src: Path, dest: Path) -> None:
         """
         Moves a file or symlink to the destination folder.
-        Uses pretty_unique_path to avoid name collisions.
+        Uses prettyUniquePath to avoid name collisions.
         """
-        # determine workspace (parent directory of the user_folder_copy)
+        # determine workspace (parent directory of the userFolderCopy)
         try:
             # Workspace is /tmp/Foldpro-Workspace* and dest is always /tmp/Foldpro-Workspace*/<user_given_folder_copy>/<a_subfolder>
             # so therefore we can derive the workspace by getting the second parent of dest:
             workspace = dest.parents[1]
-            dest = pretty_unique_path(p=(dest / src.name), type=dest_type)
+            dest = prettyUniquePath(p = dest / src.name )
             shutil.move(src, dest)
         except Exception as e:
-            raise PartiallyOrganizedError(error_cause = e)
+            raise partiallyOrganizedError(errorCause = e)
 
 
     @staticmethod
@@ -92,9 +92,9 @@ class HelperFunctions():
         return is_in_known_dirs(p)
 
     @staticmethod
-    def categorize_files_and_symlinks(user_folder_copy: Path) -> Tuple[list[Path], list[Path]]:
+    def categorize_files_and_symlinks(userFolderCopy: Path) -> Tuple[list[Path], list[Path]]:
         """
-        Walk through `user_folder_copy` and return:
+        Walk through `userFolderCopy` and return:
         - symlinks
         - regular files
 
@@ -104,7 +104,7 @@ class HelperFunctions():
         symlinks = []
         regular_files = []
 
-        for root, dirs, files in os.walk(user_folder_copy, followlinks=False):
+        for root, dirs, files in os.walk(userFolderCopy, followlinks=False):
             root_path = Path(root)
 
             # prevent descending into symlinked directories but store for later reference
@@ -131,7 +131,7 @@ class HelperFunctions():
         '''
         created_paths = []
         for folder_name in folder_names:
-            folder_path = pretty_unique_path(p=(parent_path / folder_name), type='folder')
+            folder_path = prettyUniquePath(p = parent_path / folder_name )
             folder_path.mkdir()
             created_paths.append(folder_path)
 
@@ -224,12 +224,12 @@ def organize_symlinks(mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
     for target, symlink in organizable_symlinks:
         dest = categorize_item(target, mode, subfolders)
         if dest is not None:
-            HelperFunctions.move(symlink, dest, 'symlink')
+            HelperFunctions.move(symlink, dest)
     
     # Handle non-organizable symlinks (only in 'all' or 'o_only' mode)
     if mode in {'all', 'o_only'}:
         for symlink in non_organizable:
-            HelperFunctions.move(symlink, OTHERS, 'symlink')
+            HelperFunctions.move(symlink, OTHERS)
 
 
 def organize_files(mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], files: list[Path], subfolders: list[Path]) -> None:
@@ -242,10 +242,10 @@ def organize_files(mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'],
     for file in files:
         dest = categorize_item(file, mode, subfolders)
         if dest is not None:
-            HelperFunctions.move(src = file, dest = dest, dest_type ='file')
+            HelperFunctions.move(src = file, dest = dest)
 
 
-def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], user_folder_copy: Path, subfolders: list[Optional[Path]]) -> Path:
+def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], userFolderCopy: Path, subfolders: list[Optional[Path]]) -> Path:
     '''
     This function does the following:
     - Reverts all modified file names back to their orginal form (or however close to it can without causing collisons)
@@ -256,7 +256,7 @@ def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
     # Delete non-Foldpro folders in 'all' mode
     if mode == 'all':
         keep_names = {f.name for f in subfolders if f}
-        for item in user_folder_copy.iterdir():
+        for item in userFolderCopy.iterdir():
             if item.is_dir() and item.name not in keep_names:
                 shutil.rmtree(item)
     
@@ -269,16 +269,16 @@ def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only
     )    
 
     if not foldpro_copies:
-        foldpro_copies = pretty_unique_path(p = (Path.home() / 'Foldpro Copies'), type='folder')
+        foldpro_copies = prettyUniquePath(p = Path.home() / 'Foldpro Copies' )
         foldpro_copies.mkdir()
         (foldpro_copies / '.YOUFOUNDME').touch()
 
     # Move to final destination
-    dest = pretty_unique_path((foldpro_copies / user_folder_copy.name), 'folder')  
+    dest = prettyUniquePath(p= foldpro_copies / userFolderCopy.name)  
     try:       
-        shutil.move(user_folder_copy, dest)     
+        shutil.move(userFolderCopy, dest)     
     except Exception as e:
-        raise NonAtomicMoveError(error_cause=e, dest=dest)
+        raise nonAtomicMoveError(errorCause=e, dest=dest)
     return dest
 
 MODE_FOLDERS = {
@@ -289,7 +289,7 @@ MODE_FOLDERS = {
     'o_only': ['Others']
 }
 
-def Foldpro_command(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], user_folder_copy: Path) -> Path:
+def foldproMainFunctionality(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], userFolderCopy: Path) -> Path:
     '''
     This is a wrapper function that wraps all the functionality for creating a organized folder copy of the user's folder.
     Everything that is executed before it(in in main.py file where it's used), is a prelude to this function.
@@ -298,7 +298,7 @@ def Foldpro_command(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_onl
     # Create folders and pad with None values
     created = HelperFunctions.make_folders(
         folder_names=MODE_FOLDERS[mode],
-        parent_path=user_folder_copy
+        parent_path=userFolderCopy
     )
     
     # Unpack with defaults - creates dict and extracts in one go
@@ -307,13 +307,13 @@ def Foldpro_command(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_onl
     subfolders = [folder_dict.get(name) for name in folder_names]
     
     # Organize
-    symlinks, files = HelperFunctions.categorize_files_and_symlinks(user_folder_copy)
+    symlinks, files = HelperFunctions.categorize_files_and_symlinks(userFolderCopy)
     organize_symlinks(mode, symlinks, subfolders)
     organize_files(mode, files, subfolders)
 
     # Finalize
     return finalize_state(
         mode=mode,
-        user_folder_copy=user_folder_copy,
+        userFolderCopy=userFolderCopy,
         subfolders=subfolders
     )

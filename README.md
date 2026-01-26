@@ -14,11 +14,24 @@ These organized copies can be categorized into one (or all) of the following:
 
 # How to Use
 1. Install Foldpro: pip3 install foldpro
-2. Follow the prompts until your folders have been organized
-3. Run it: foldpro
-4. Go to `~/Foldpro Copies` to view the organized copy
+2. Run this command in your terminal: foldpro the/path/to/a/folder
+3. Go to `~/Foldpro Copies` to view the organized copy
 
-**Note:** To exit at any time, enter `e` at any prompt.
+# Optional Arguments
+If you would like to organize your folders into only one of the categories(e.g.photos only) run the foldpro comamnd with the -m optional argument:
+// For photos only:
+foldpro -m p the/path
+
+// For code files only:
+foldpro -m c the/path
+
+// For others only:
+foldpro -m o the/path
+
+// For downloads from terminal only:
+foldpro -m d the/path
+
+
 
 # How Foldpro Works
 Here are some details about how Foldpro organizes your files:
