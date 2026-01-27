@@ -9,7 +9,7 @@ These organized copies can be categorized into one (or all) of the following:
 - Others
 
 # Prerequisites
-- macOS
+- Running macOS
 - Python 3.9 or higher
 
 # How to Use
