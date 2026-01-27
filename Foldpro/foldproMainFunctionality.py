@@ -245,7 +245,7 @@ def organize_files(mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'],
             HelperFunctions.move(src = file, dest = dest)
 
 
-def finalize_state(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], userFolderCopy: Path, subfolders: list[Optional[Path]]) -> Path:
+def finalizeState(*, mode: Literal['all', 'c_only', 'd_only', 'p_only', 'o_only'], userFolderCopy: Path, subfolders: list[Optional[Path]]) -> Path:
     '''
     This function does the following:
     - Reverts all modified file names back to their orginal form (or however close to it can without causing collisons)
@@ -312,8 +312,8 @@ def foldproMainFunctionality(*, mode: Literal['all', 'c_only', 'd_only', 'p_only
     organize_files(mode, files, subfolders)
 
     # Finalize
-    return finalize_state(
+    return finalizeState(
         mode=mode,
-        userFolderCopy=userFolderCopy,
-        subfolders=subfolders
+        userFolderCopy = userFolderCopy,
+        subfolders = subfolders
     )

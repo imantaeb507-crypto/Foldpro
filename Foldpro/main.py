@@ -11,8 +11,8 @@ def main():
         raise wrongOSError()
     mode, userFolder = determineMode()
     userFolderCopy = preFlightOperations(userFolder)
-    finalDest = foldproMainFunctionality(mode=mode, user_folder_copy=userFolderCopy)
-    print(f"[bold]Folder [green]{finalDest.name}[/green] has been organized and can be found at ~/FoldproCopies.[/bold]")
+    finalDest = foldproMainFunctionality(mode=mode, userFolderCopy = userFolderCopy)
+    print(f"[bold]Folder [green]{finalDest.name}[/green] has been organized and can be found at ~/Foldpro Copies.[/bold]")
 
 if __name__ == '__main__':
     main()
